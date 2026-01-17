@@ -53,10 +53,10 @@ const MyLeagues = () => {
         fetchMyLeagues();
     }, [user]);
 
-    const handleSelectLeague = (comp) => {
-        const res = actions.switchCompetition(comp.id);
+    const handleSelectLeague = async (comp) => {
+        const res = await actions.switchCompetition(comp.id);
         if (res.success) {
-            leagueActions.loadLeague(comp.id);
+            await leagueActions.loadLeague(comp.id); // Also good practice to await this
             navigate('/dashboard');
         } else {
             alert('Error loading league: ' + res.message);
