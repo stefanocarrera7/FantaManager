@@ -25,37 +25,42 @@ const CompetitionSelect = () => {
         return <Navigate to="/dashboard" replace />;
     }
 
-    const handleCreate = (e) => {
+    const handleCreate = async (e) => {
         e.preventDefault();
 
         // 1. Create Competition (Pass current user as Admin)
-        const comp = actions.createCompetition(compName || 'My League', user.username);
+        const comp = await actions.createCompetition(compName || 'My League', user.id); // Use user.id, not username
+
+        if (!comp) {
+            setError("Failed to create competition. Please try again.");
+            return;
+        }
 
         // 2. Create User's Team in this Competition
-        const teamRes = leagueActions.registerTeam(comp.id, teamName, user.username);
+        const teamRes = await leagueActions.registerTeam(comp.id, teamName, user.id); // Use user.id
 
         if (teamRes.success) {
             // 3. Load the League
-            leagueActions.loadLeague(comp.id);
+            await leagueActions.loadLeague(comp.id);
             navigate('/dashboard');
         } else {
             setError(teamRes.message);
         }
     };
 
-    const handleJoin = (e) => {
+    const handleJoin = async (e) => {
         e.preventDefault();
 
         // 1. Join Competition (Verify Code)
-        const res = actions.joinCompetition(joinCode);
+        const res = await actions.joinCompetition(joinCode);
 
         if (res.success) {
             // 2. Create Team
-            const teamRes = leagueActions.registerTeam(res.competition.id, teamName, user.username);
+            const teamRes = await leagueActions.registerTeam(res.competition.id, teamName, user.id); // Use user.id
 
             if (teamRes.success) {
                 // 3. Load League
-                leagueActions.loadLeague(res.competition.id);
+                await leagueActions.loadLeague(res.competition.id);
                 navigate('/dashboard');
             } else {
                 setError(teamRes.message);
