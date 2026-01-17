@@ -28,11 +28,19 @@ const CompetitionSelect = () => {
     const handleCreate = async (e) => {
         e.preventDefault();
 
+        console.log("Handle Create triggered. User:", user);
+        if (!user || !user.id) {
+            console.error("User ID missing!");
+            setError("User error. Please logout and login again.");
+            return;
+        }
+
         // 1. Create Competition (Pass current user as Admin)
         const comp = await actions.createCompetition(compName || 'My League', user.id); // Use user.id, not username
 
         if (!comp) {
-            setError("Failed to create competition. Please try again.");
+            console.error("Competition creation returned null.");
+            setError("Failed to create competition. Check console for Supabase error.");
             return;
         }
 
@@ -44,6 +52,7 @@ const CompetitionSelect = () => {
             await leagueActions.loadLeague(comp.id);
             navigate('/dashboard');
         } else {
+            console.error("Register team failed:", teamRes);
             setError(teamRes.message);
         }
     };

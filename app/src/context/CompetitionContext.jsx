@@ -42,6 +42,8 @@ export const CompetitionProvider = ({ children }) => {
 
     // HELPERS
     const createCompetition = async (name = 'Serie A', adminId) => {
+        console.log("Creating competition:", { name, adminId }); // Log Inputs
+
         // Generate Share Code
         const shareCode = Math.random().toString(36).substring(2, 8).toUpperCase();
 
@@ -66,9 +68,12 @@ export const CompetitionProvider = ({ children }) => {
             .single();
 
         if (error) {
-            console.error('Error creating competition:', error);
-            return null; // Handle error in UI
+            console.error('Error creating competition (Supabase):', error);
+            // alert('Supabase Error: ' + error.message + ' (Code: ' + error.code + ')'); // Visible Alert
+            return null;
         }
+
+        console.log("Competition created successfully:", data);
 
         // Remap to frontend structure if needed, or use raw data
         const mappedComp = {
