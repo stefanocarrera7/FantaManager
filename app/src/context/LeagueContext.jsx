@@ -211,6 +211,78 @@ export const LeagueProvider = ({ children }) => {
         }
     };
 
+    const updateLeagueSettings = (newSettings) => {
+        setLeagueSettings(prev => ({ ...prev, ...newSettings }));
+    };
+
+    // --- TRADING SYSTEM ---
+    const [offers, setOffers] = useState([]);
+
+    const sendOffer = (offer) => {
+        const newOffer = { ...offer, id: `off_${Date.now()}`, status: 'pending', date: new Date().toISOString() };
+        setOffers(prev => [...prev, newOffer]);
+        return newOffer;
+    };
+
+    const resolveOffer = (offerId, action) => {
+        setOffers(prev => prev.map(o => o.id === offerId ? { ...o, status: action === 'cancel' ? 'cancelled' : action } : o));
+
+        if (action !== 'accept') return;
+
+        const targetOffer = offers.find(o => o.id === offerId);
+        if (!targetOffer) return;
+
+        const { fromTeamId, toTeamId, type, price, playerInId, playerOutId, loanDetails } = targetOffer;
+
+        setTeams(prevTeams => {
+            const fromTeam = prevTeams.find(t => t.id === fromTeamId);
+            const toTeam = prevTeams.find(t => t.id === toTeamId);
+
+            if (!fromTeam || !toTeam) return prevTeams;
+
+            const transferPlayer = (teamsList, playerId, sourceId, destId, metadata = {}) => {
+                const source = teamsList.find(t => t.id === sourceId);
+                const dest = teamsList.find(t => t.id === destId);
+                const player = source.roster.find(p => p.id === playerId);
+                if (!player) return teamsList;
+
+                const playerToMove = { ...player, ...metadata };
+                const newSource = { ...source, roster: source.roster.filter(p => p.id !== playerId) };
+                const newDest = { ...dest, roster: [...dest.roster, playerToMove] };
+
+                return teamsList.map(t => {
+                    if (t.id === sourceId) return newSource;
+                    if (t.id === destId) return newDest;
+                    return t;
+                });
+            };
+
+            let updatedTeams = [...prevTeams];
+
+            if (price && price > 0) {
+                updatedTeams = updatedTeams.map(t => {
+                    if (t.id === fromTeamId) return { ...t, budget: t.budget - price };
+                    if (t.id === toTeamId) return { ...t, budget: t.budget + price };
+                    return t;
+                });
+            }
+
+            if (type === 'purchase') {
+                updatedTeams = transferPlayer(updatedTeams, playerInId, toTeamId, fromTeamId);
+            } else if (type === 'loan') {
+                updatedTeams = transferPlayer(updatedTeams, playerInId, toTeamId, fromTeamId, {
+                    loanedFrom: toTeamId,
+                    loanDetails: loanDetails
+                });
+            } else if (type === 'swap') {
+                updatedTeams = transferPlayer(updatedTeams, playerInId, toTeamId, fromTeamId);
+                updatedTeams = transferPlayer(updatedTeams, playerOutId, fromTeamId, toTeamId);
+            }
+
+            return updatedTeams;
+        });
+    };
+
     // Derived: Get Current User Team
     const myTeam = currentUser.teamId ? teams.find(t => t.id === currentUser.teamId) : null;
 
