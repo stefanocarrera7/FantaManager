@@ -1,0 +1,57 @@
+:root {
+  /* Vintage Football Minimal Palette - HEX */
+
+  /* Backgrounds: Cream / Paper */
+  --color-bg-primary: #FDFBF7;
+  /* Off White / Cream */
+  --color-bg-secondary: #F0EBE0;
+  /* Slightly darker beige */
+  --color-bg-surface: #FFFFFF;
+  /* Pure White Surface */
+
+  /* Accents */
+  --color-accent-primary: #2A4B3C;
+  /* Vintage Pitch Green */
+  --color-accent-secondary: #8B2635;
+  /* Vintage Burgundy */
+  --color-accent-action: #2C3E50;
+  /* Classic Navy */
+  --color-accent-gold: #C5A065;
+  /* Muted Gold/Brass */
+
+  /* Text */
+  --color-text-primary: #1B2631;
+  /* Dark Charcoal */
+  --color-text-secondary: #5C6269;
+  /* Slate Grey */
+  --color-text-muted: #92979C;
+  /* Muted Grey */
+  --color-text-light: #FDFBF7;
+  /* Cream text for dark backgrounds */
+
+  /* Borders & UI */
+  --border-radius-sm: 4px;
+  --border-radius-md: 8px;
+  --border-radius-lg: 12px;
+
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.05);
+
+  /* Glass logic -> Solid Card logic */
+  --glass-bg: #FFFFFF;
+  --glass-border: #E5E0D5;
+  --glass-blur: 0px;
+
+  /* Fonts */
+  --font-family-body: 'Inter', system-ui, sans-serif;
+  --font-family-header: 'Playfair Display', serif;
+  --font-weight-header: 700;
+}
+
+/* Base Body Styles */
+body {
+  background-color: var(--color-bg-primary);
+  color: var(--color-text-primary);
+  font-family: var(--font-family-body);
+}

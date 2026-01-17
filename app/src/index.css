@@ -1,0 +1,194 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Playfair+Display:wght@400;700&display=swap');
+
+/* DEFINING VARIABLES DIRECTLY HERE TO ENSURE LOAD */
+:root {
+  /* Vintage Football Minimal Palette - HEX */
+
+  /* Backgrounds: Darker Vintage */
+  --color-bg-primary: #EAE5D9;
+  /* Darker Beige/Parchment */
+  --color-bg-secondary: #DFD8C8;
+  /* Darker secondary */
+  --color-bg-surface: #F4F1EA;
+  /* Cream Surface (was white) */
+
+  /* Accents */
+  --color-accent-primary: #1A3C2F;
+  /* Deep Forest Green */
+  --color-accent-secondary: #741B28;
+  /* Deep Wine Red */
+  --color-accent-action: #1F2D3D;
+  /* Deep Navy */
+  --color-accent-gold: #B08D55;
+  /* Antique Gold */
+
+  /* Text */
+  --color-text-primary: #1B2631;
+  /* Dark Charcoal */
+  --color-text-secondary: #5C6269;
+  /* Slate Grey */
+  --color-text-muted: #92979C;
+  /* Muted Grey */
+  --color-text-light: #FDFBF7;
+  /* Cream text for dark backgrounds */
+
+  /* Borders & UI */
+  --border-radius-sm: 4px;
+  --border-radius-md: 8px;
+  --border-radius-lg: 12px;
+
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.05);
+
+  /* Glass logic -> Solid Card logic */
+  --glass-bg: #FFFFFF;
+  --glass-border: #E5E0D5;
+  --glass-blur: 0px;
+
+  /* Fonts */
+  --font-family-body: 'Inter', system-ui, sans-serif;
+  --font-family-header: 'Playfair Display', serif;
+  --font-weight-header: 700;
+}
+
+/* Reset & Base */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background-color: var(--color-bg-primary) !important;
+  color: var(--color-text-primary) !important;
+  font-family: var(--font-family-body) !important;
+  line-height: 1.5;
+  min-height: 100vh;
+  margin: 0;
+
+  /* Retro Texture Overlay */
+  background-image: url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M11 18c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm48 25c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm-43-7c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm63 31c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM34 90c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm56-76c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM12 86c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm28-65c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm23-11c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-6 60c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm29 22c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zM32 63c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm57-13c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-9-21c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM60 91c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM35 41c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM12 60c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2z' fill='%239C92AC' fill-opacity='0.03' fill-rule='evenodd'/%3E%3C/svg%3E");
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: var(--font-family-header);
+  color: var(--color-accent-primary);
+}
+
+/* Utilities */
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 2rem;
+}
+
+.text-gradient {
+  background: none;
+  -webkit-text-fill-color: initial;
+  color: var(--color-accent-primary);
+  font-family: var(--font-family-header);
+}
+
+/* Buttons */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.75rem 1.5rem;
+  border-radius: var(--border-radius-sm);
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: 1px solid transparent;
+  font-family: var(--font-family-body);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  font-size: 0.85rem;
+}
+
+.btn-primary {
+  background: var(--color-accent-primary);
+  color: var(--color-text-light);
+  border-color: var(--color-accent-primary);
+  box-shadow: 0 2px 0 rgba(0, 0, 0, 0.1);
+}
+
+.btn-primary:hover {
+  background: #1e382c;
+  /* Darker Green Manual */
+  transform: translateY(-1px);
+}
+
+.btn-secondary {
+  background: white;
+  color: var(--color-text-primary);
+  border: 1px solid var(--glass-border);
+}
+
+.btn-secondary:hover {
+  border-color: var(--color-accent-primary);
+  color: var(--color-accent-primary);
+}
+
+/* "Glass" Card -> Vintage Paper Card */
+.glass-card {
+  background: var(--color-bg-surface);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--border-radius-sm);
+  padding: 1.5rem;
+  box-shadow: var(--shadow-sm);
+  position: relative;
+}
+
+/* Decorative top border for cards */
+.glass-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background-color: var(--color-accent-primary);
+  border-top-left-radius: var(--border-radius-sm);
+  border-top-right-radius: var(--border-radius-sm);
+  opacity: 0.8;
+}
+
+.input-field {
+  background: white;
+  border: 1px solid var(--glass-border);
+  color: var(--color-text-primary);
+  padding: 0.75rem;
+  border-radius: var(--border-radius-sm);
+  font-family: inherit;
+  transition: border-color 0.2s;
+}
+
+.input-field:focus {
+  outline: none;
+  border-color: var(--color-accent-primary);
+}
+
+/* Badges */
+.badge {
+  padding: 0.25rem 0.75rem;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  border: 1px solid currentColor;
+}
+
+.badge-primary {
+  color: var(--color-accent-primary);
+  background: white;
+}
