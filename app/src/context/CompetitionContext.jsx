@@ -57,8 +57,7 @@ export const CompetitionProvider = ({ children }) => {
             name,
             share_code: shareCode,
             admin_id: adminId, // Supabase Auth ID
-            settings: {},
-            status: 'active'
+            settings: {}
         };
 
         const { data, error } = await supabase
