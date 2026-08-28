@@ -1,5 +1,5 @@
 import { NavLink } from 'react-router-dom';
-import { LayoutDashboard, Users, ShoppingBag, Banknote, Trophy, LandPlot, Settings, LogOut } from 'lucide-react';
+import { LayoutDashboard, Users, ShoppingBag, Banknote, Trophy, LandPlot, Settings, LogOut, Shield } from 'lucide-react';
 import { useLeague } from '../../context/LeagueContext';
 import { useAuth } from '../../context/AuthContext';
 import styles from './Layout.module.css'; // We will create this
@@ -8,6 +8,7 @@ const Sidebar = () => {
     const navItems = [
         { label: 'My Leagues', path: '/my-leagues', icon: Trophy }, // NEW
         { label: 'Dashboard', path: '/dashboard', icon: LayoutDashboard }, // Updated path
+        { label: 'Formazione', path: '/lineup', icon: Shield },
         { label: 'Rosa (Roster)', path: '/roster', icon: Users },
         { label: 'Mercato', path: '/market', icon: ShoppingBag },
         { label: 'Finanze', path: '/finance', icon: Banknote },

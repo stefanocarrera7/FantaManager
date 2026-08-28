@@ -6,6 +6,7 @@ import Roster from './pages/Roster';
 import Finance from './pages/Finance';
 import MarketDashboard from './features/market/MarketDashboard';
 import AdminSetup from './pages/AdminSetup';
+import Lineup from './pages/Lineup';
 import CompetitionDashboard from './features/competition/CompetitionDashboard';
 import Login from './pages/Login';
 import ProtectedRoute from './components/ProtectedRoute';
@@ -46,6 +47,7 @@ function App() {
         <Route element={<RequireCompetition />}>
           <Route element={<AppLayout />}>
             <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="lineup" element={<Lineup />} />
             <Route path="market" element={<Market />} />
             <Route path="roster" element={<Roster />} />
             <Route path="finance" element={<Finance />} />

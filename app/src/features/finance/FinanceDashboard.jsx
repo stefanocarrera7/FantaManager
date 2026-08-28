@@ -1,4 +1,4 @@
-import { Clock } from 'lucide-react';
+import { Clock, Banknote, Users, Sparkles } from 'lucide-react';
 
 const formatDate = (date) => {
     if (!date) return 'N/D';
@@ -30,78 +30,68 @@ const FinanceCard = ({ title, amount, subtitle, type = 'neutral' }) => {
 
 const FinanceDashboard = ({ transferBudget = 0, salaryBudget = 0, financials = {} }) => {
     const totalSalaries = financials.totalSalaries ?? 0;
-    const projectedSalaryBudget = financials.projectedSalaryBudget ?? 0;
-    const nextSalaryPaymentDate = financials.nextSalaryPaymentDate;
     const nextRestoreDate = financials.nextRestoreDate;
     const restoreTransferAmount = financials.restoreTransferAmount ?? 0;
     const restoreSalaryAmount = financials.restoreSalaryAmount ?? 0;
     const history = financials.history || [];
 
-    const avgSalaryPerPlayer = (totalSalaries / 25).toFixed(1);
-
     return (
         <div>
+            {/* Top Stat Cards */}
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '1.5rem', marginBottom: '2rem' }}>
                 <FinanceCard
                     title="Budget Trasferimenti"
                     amount={transferBudget}
-                    subtitle="Disponibile per acquisti"
+                    subtitle="Disponibile per acquisti e scambi"
                     type="positive"
                 />
                 <FinanceCard
-                    title="Monte Ingaggi"
+                    title="Monte Ingaggi Residuo"
                     amount={salaryBudget}
-                    subtitle="Fondo stipendi"
-                    type="neutral"
+                    subtitle="Spazio salariale disponibile in rosa"
+                    type={salaryBudget < 0 ? 'negative' : 'positive'}
                 />
                 <FinanceCard
-                    title="Stipendi Totali (Stagione)"
+                    title="Stipendi Impegnati Totali"
                     amount={totalSalaries}
-                    subtitle={`Media: ${avgSalaryPerPlayer}M per giocatore`}
+                    subtitle="Detratti in tempo reale ad ogni acquisto"
                     type="neutral"
-                />
-                <FinanceCard
-                    title="Proiezione Post-Stipendi"
-                    amount={projectedSalaryBudget}
-                    subtitle="Fondo residuo dopo pagamento"
-                    type={projectedSalaryBudget < 0 ? 'negative' : 'positive'}
                 />
             </div>
 
+            {/* Pre-Auction Restore Banner */}
             <div className="glass-card" style={{ padding: '1.5rem', marginBottom: '2rem' }}>
-                <h3 style={{ fontSize: '1.25rem', fontWeight: 600, marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                    <Clock size={20} color="var(--color-accent-gold)" />
-                    Scadenze e Ripristino Budget
+                <h3 style={{ fontSize: '1.25rem', fontWeight: 600, marginBottom: '1.25rem', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                    <Clock size={20} color="var(--color-accent-primary)" />
+                    Ripristino Budget Annuale (Pre-Asta)
                 </h3>
 
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '2rem' }}>
-                    <div style={{ padding: '1rem', backgroundColor: 'rgba(255,255,255,0.03)', borderRadius: '12px', borderLeft: '4px solid var(--color-accent-secondary)' }}>
-                        <h4 style={{ fontWeight: 600, marginBottom: '0.5rem' }}>Prossimo Pagamento Stipendi</h4>
-                        <p style={{ fontSize: '1.5rem', fontWeight: 700, color: 'var(--color-accent-secondary)' }}>
-                            {totalSalaries} <span style={{ fontSize: '0.9rem', color: 'var(--color-text-secondary)' }}>M</span>
-                        </p>
-                        <p style={{ fontSize: '0.8rem', color: 'var(--color-text-muted)', marginTop: '0.25rem' }}>
-                            Data: {formatDate(nextSalaryPaymentDate)}
-                        </p>
-                    </div>
-
-                    <div style={{ padding: '1rem', backgroundColor: 'rgba(255,255,255,0.03)', borderRadius: '12px', borderLeft: '4px solid var(--color-accent-primary)' }}>
-                        <h4 style={{ fontWeight: 600, marginBottom: '0.5rem' }}>Prossimo Restore Budget</h4>
-                        <p style={{ fontSize: '1.25rem', fontWeight: 700, color: 'var(--color-accent-primary)' }}>
-                            +{restoreTransferAmount} Trasf. | +{restoreSalaryAmount} Ingaggi
-                        </p>
-                        <p style={{ fontSize: '0.8rem', color: 'var(--color-text-muted)', marginTop: '0.25rem' }}>
-                            Data: {formatDate(nextRestoreDate)}
-                        </p>
+                <div style={{ padding: '1.25rem', backgroundColor: 'rgba(255,255,255,0.03)', borderRadius: '12px', borderLeft: '4px solid var(--color-accent-primary)' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
+                        <div>
+                            <h4 style={{ fontWeight: 600, margin: '0 0 0.25rem 0', fontSize: '1.1rem' }}>Prossimo Incremento Budget</h4>
+                            <p style={{ margin: 0, color: 'var(--color-text-muted)', fontSize: '0.85rem' }}>
+                                Data prevista: <strong style={{ color: 'white' }}>{formatDate(nextRestoreDate)}</strong> (Prima dell'asta estiva)
+                            </p>
+                        </div>
+                        <div style={{ textAlign: 'right' }}>
+                            <div style={{ fontSize: '1.3rem', fontWeight: 700, color: 'var(--color-accent-primary)' }}>
+                                +{restoreTransferAmount} M Trasferimenti
+                            </div>
+                            <div style={{ fontSize: '1.1rem', fontWeight: 600, color: 'var(--color-accent-secondary)' }}>
+                                +{restoreSalaryAmount} M Monte Ingaggi
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
 
+            {/* Financial Activity */}
             <div className="glass-card" style={{ padding: '1.5rem' }}>
-                <h3 style={{ fontSize: '1.25rem', fontWeight: 600, marginBottom: '1rem' }}>Recent Activity</h3>
+                <h3 style={{ fontSize: '1.25rem', fontWeight: 600, marginBottom: '1rem' }}>Storico Finanziario</h3>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
                     {history.length === 0 ? (
-                        <p style={{ color: 'var(--color-text-muted)' }}>No financial activity recorded.</p>
+                        <p style={{ color: 'var(--color-text-muted)' }}>Nessun movimento finanziario straordinario registrato.</p>
                     ) : (
                         history.map((item, idx) => (
                             <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', padding: '0.75rem', borderBottom: '1px solid var(--glass-border)' }}>

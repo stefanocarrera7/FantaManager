@@ -35,20 +35,10 @@ export const TeamProvider = ({ children }) => {
     // Derived Financials
     const totalSalaries = effectiveTeam.roster.reduce((sum, p) => sum + (p.salary || 0), 0);
 
-    // Next event dates
-    const nextSalaryPaymentDate = useMemo(() => {
-        return getNextEventDate(leagueSettings.salaryPaymentDate);
-    }, [leagueSettings.salaryPaymentDate]);
-
+    // Next pre-auction restore date
     const nextRestoreDate = useMemo(() => {
         return getNextEventDate(leagueSettings.restoreDate);
     }, [leagueSettings.restoreDate]);
-
-    // Projected salary budget after next payment
-    const projectedSalaryBudget = useMemo(() => {
-        const current = effectiveTeam.salaryBudget ?? effectiveTeam.salary_budget ?? 0;
-        return Math.round((current - totalSalaries) * 10) / 10;
-    }, [effectiveTeam.salaryBudget, effectiveTeam.salary_budget, totalSalaries]);
 
     // Actions
     // Note: Most "Write" actions like Buying players are now handled by LeagueContext/Admin.
@@ -78,8 +68,6 @@ export const TeamProvider = ({ children }) => {
         },
         financials: {
             totalSalaries,
-            projectedSalaryBudget,
-            nextSalaryPaymentDate,
             nextRestoreDate,
             restoreTransferAmount: leagueSettings.restoreTransferAmount || 0,
             restoreSalaryAmount: leagueSettings.restoreSalaryAmount || 0,

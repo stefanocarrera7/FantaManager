@@ -149,48 +149,60 @@ export const LeagueProvider = ({ children }) => {
     const [leagueSettings, setLeagueSettings] = useState(DEFAULT_FINANCE_SETTINGS);
 
     const updateTeamTransferBudget = async (teamId, newBudget) => {
+        setTeams(prev => prev.map(t => t.id === teamId ? { ...t, transferBudget: parseInt(newBudget) } : t));
         const { error } = await supabase
             .from('teams')
             .update({ transfer_budget: parseInt(newBudget) })
             .eq('id', teamId);
 
-        if (!error) {
-            setTeams(prev => prev.map(t => t.id === teamId ? { ...t, transferBudget: parseInt(newBudget) } : t));
-        } else {
-            alert("Failed to update transfer budget: " + error.message);
+        if (error) {
+            console.warn("DB update transfer_budget failed:", error.message);
         }
     };
 
     const updateTeamSalaryBudget = async (teamId, newBudget) => {
+        setTeams(prev => prev.map(t => t.id === teamId ? { ...t, salaryBudget: parseInt(newBudget) } : t));
         const { error } = await supabase
             .from('teams')
             .update({ salary_budget: parseInt(newBudget) })
             .eq('id', teamId);
 
-        if (!error) {
-            setTeams(prev => prev.map(t => t.id === teamId ? { ...t, salaryBudget: parseInt(newBudget) } : t));
-        } else {
-            alert("Failed to update salary budget: " + error.message);
+        if (error) {
+            console.warn("DB update salary_budget failed:", error.message);
         }
     };
 
     const applyBudgetToAllTeams = async (newTransferBudget, newSalaryBudget) => {
-        const { error } = await supabase
-            .from('teams')
-            .update({
-                transfer_budget: parseInt(newTransferBudget),
-                salary_budget: parseInt(newSalaryBudget)
-            })
-            .eq('competition_id', currentCompetitionId);
+        try {
+            const { error } = await supabase
+                .from('teams')
+                .update({
+                    transfer_budget: parseInt(newTransferBudget),
+                    salary_budget: parseInt(newSalaryBudget)
+                })
+                .eq('competition_id', currentCompetitionId);
 
-        if (!error) {
-            setTeams(prev => prev.map(t => ({
-                ...t,
-                transferBudget: parseInt(newTransferBudget),
-                salaryBudget: parseInt(newSalaryBudget)
-            })));
-        } else {
-            alert("Failed to reset budgets: " + error.message);
+            if (!error) {
+                setTeams(prev => prev.map(t => ({
+                    ...t,
+                    transferBudget: parseInt(newTransferBudget),
+                    salaryBudget: parseInt(newSalaryBudget)
+                })));
+                return { success: true };
+            } else {
+                console.warn("DB update failed (missing column?):", error.message);
+                // Optimistic local fallback
+                setTeams(prev => prev.map(t => ({
+                    ...t,
+                    transferBudget: parseInt(newTransferBudget),
+                    salaryBudget: parseInt(newSalaryBudget)
+                })));
+                alert("Attenzione: La colonna 'salary_budget' non è ancora presente nel database Supabase. Esegui la query SQL indicata per salvarlo permanentemente.");
+                return { success: false, message: error.message };
+            }
+        } catch (e) {
+            console.error('Error applying budget:', e);
+            return { success: false, message: e.message };
         }
     };
 
@@ -198,7 +210,7 @@ export const LeagueProvider = ({ children }) => {
         // Optimistic check (frontend only)
         const isPlayerAlreadyAssigned = teams.some(t => t.roster.some(p => p.id === player.id));
         if (isPlayerAlreadyAssigned) {
-            alert(`Player ${player.name} is already assigned to a team.`);
+            alert(`Il calciatore ${player.name} è già assegnato ad una squadra.`);
             return;
         }
 
@@ -217,23 +229,26 @@ export const LeagueProvider = ({ children }) => {
 
         const updatedRoster = [...team.roster, newPlayer];
         const updatedTransferBudget = (team.transferBudget ?? team.transfer_budget ?? 0) - parseFloat(auctionPrice);
+        const updatedSalaryBudget = Math.round(((team.salaryBudget ?? team.salary_budget ?? 0) - salary) * 10) / 10;
+
+        // Optimistic update
+        setTeams(prev => prev.map(t => t.id === teamId
+            ? { ...t, roster: updatedRoster, transferBudget: updatedTransferBudget, salaryBudget: updatedSalaryBudget }
+            : t
+        ));
 
         // Supabase Update
         const { error } = await supabase
             .from('teams')
             .update({
                 roster: updatedRoster,
-                transfer_budget: updatedTransferBudget
+                transfer_budget: updatedTransferBudget,
+                salary_budget: updatedSalaryBudget
             })
             .eq('id', teamId);
 
-        if (!error) {
-            setTeams(prev => prev.map(t => t.id === teamId
-                ? { ...t, roster: updatedRoster, transferBudget: updatedTransferBudget }
-                : t
-            ));
-        } else {
-            alert("Error updating roster: " + error.message);
+        if (error) {
+            console.error("Error updating roster in DB:", error.message);
         }
     };
 
@@ -243,23 +258,29 @@ export const LeagueProvider = ({ children }) => {
 
         const playerToRemove = team.roster.find(p => p.id === playerId);
         const refundAmt = playerToRemove ? playerToRemove.auctionPrice : 0;
+        const salaryRefund = playerToRemove ? (playerToRemove.salary || 0) : 0;
 
         const updatedRoster = team.roster.filter(p => p.id !== playerId);
         const updatedTransferBudget = (team.transferBudget ?? team.transfer_budget ?? 0) + refundAmt;
+        const updatedSalaryBudget = Math.round(((team.salaryBudget ?? team.salary_budget ?? 0) + salaryRefund) * 10) / 10;
+
+        // Optimistic update
+        setTeams(prev => prev.map(t => t.id === teamId
+            ? { ...t, roster: updatedRoster, transferBudget: updatedTransferBudget, salaryBudget: updatedSalaryBudget }
+            : t
+        ));
 
         const { error } = await supabase
             .from('teams')
             .update({
                 roster: updatedRoster,
-                transfer_budget: updatedTransferBudget
+                transfer_budget: updatedTransferBudget,
+                salary_budget: updatedSalaryBudget
             })
             .eq('id', teamId);
 
-        if (!error) {
-            setTeams(prev => prev.map(t => t.id === teamId
-                ? { ...t, roster: updatedRoster, transferBudget: updatedTransferBudget }
-                : t
-            ));
+        if (error) {
+            console.error("Error removing player in DB:", error.message);
         }
     };
 
