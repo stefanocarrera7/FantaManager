@@ -12,6 +12,7 @@ export const useLeague = () => {
 };
 
 import { supabase } from '../lib/supabase';
+import { checkAndProcessBudgetEvents, DEFAULT_FINANCE_SETTINGS } from '../utils/budgetProcessor';
 
 // ... imports
 
@@ -43,26 +44,49 @@ export const LeagueProvider = ({ children }) => {
             return;
         }
 
+        // Load competition settings
+        const { data: comp } = await supabase
+            .from('competitions')
+            .select('admin_id, settings')
+            .eq('id', competitionId)
+            .single();
+
+        // Merge with defaults (in case some settings are missing)
+        const settings = { ...DEFAULT_FINANCE_SETTINGS, ...(comp?.settings || {}) };
+        setLeagueSettings(settings);
+
         // Normalize data (backend uses snake_case, frontend uses camelCase)
-        const normalizedTeams = leagueTeams.map(t => ({
+        let normalizedTeams = leagueTeams.map(t => ({
             ...t,
             id: t.id,
             ownerId: t.owner_id,
             competitionId: t.competition_id,
-            budget: t.budget,
+            transferBudget: t.transfer_budget ?? t.budget ?? 300,
+            salaryBudget: t.salary_budget ?? 200,
+            budget: t.budget, // Keep for backwards compat
             roster: t.roster || []
         }));
+
+        // --- AUTO-PROCESS BUDGET EVENTS ---
+        const isAdmin = comp?.admin_id === user?.id;
+        if (isAdmin) {
+            // Only admin triggers auto-processing to avoid race conditions
+            const result = await checkAndProcessBudgetEvents(competitionId, settings, normalizedTeams);
+            if (result.changed) {
+                normalizedTeams = result.updatedTeams.map(t => ({
+                    ...t,
+                    transferBudget: t.transferBudget ?? t.transfer_budget,
+                    salaryBudget: t.salaryBudget ?? t.salary_budget
+                }));
+                setLeagueSettings(result.updatedSettings);
+                console.log('[LeagueContext] Budget events processed automatically.');
+            }
+        }
 
         setTeams(normalizedTeams);
 
         // Determine User Role
         if (!user) return;
-
-        // Check Admin Status (Need to fetch Comp admin_id if not passed, assuming AuthContext might have role later?)
-        // Optimizing: We rely on CompetitionContext storing the Admin ID, 
-        // OR we just fetch the competition details here once.
-        const { data: comp } = await supabase.from('competitions').select('admin_id').eq('id', competitionId).single();
-        const isAdmin = comp?.admin_id === user.id;
 
         const myTeam = normalizedTeams.find(t => t.ownerId === user.id);
         const role = isAdmin ? 'admin' : (myTeam ? 'manager' : 'guest');
@@ -71,12 +95,14 @@ export const LeagueProvider = ({ children }) => {
     };
 
     const registerTeam = async (competitionId, teamName, ownerId) => {
-        // Backend enforces uniqueness via Unique Constraint on (competition_id, owner_id)
+        // Use league settings for initial budgets
         const newTeam = {
             competition_id: competitionId,
             owner_id: user.id, // Securely use auth user id
             name: teamName,
-            budget: 500,
+            budget: leagueSettings.initialTransferBudget + leagueSettings.initialSalaryBudget, // Legacy compat
+            transfer_budget: leagueSettings.initialTransferBudget,
+            salary_budget: leagueSettings.initialSalaryBudget,
             roster: []
         };
 
@@ -95,6 +121,9 @@ export const LeagueProvider = ({ children }) => {
             id: data.id,
             ownerId: data.owner_id,
             competitionId: data.competition_id,
+            transferBudget: data.transfer_budget,
+            salaryBudget: data.salary_budget,
+            budget: data.budget,
             roster: []
         };
 
@@ -116,33 +145,50 @@ export const LeagueProvider = ({ children }) => {
     // Current User State
     const [currentUser, setCurrentUser] = useState({ role: 'guest', teamId: null });
 
-    // League Settings (Local state for now, ideally in DB)
-    const [leagueSettings, setLeagueSettings] = useState({
-        salaryPercentage: 0.1,
-        totalBudget: 500
-    });
+    // League Settings (now loaded from DB via loadLeague)
+    const [leagueSettings, setLeagueSettings] = useState(DEFAULT_FINANCE_SETTINGS);
 
-    const updateTeamBudget = async (teamId, newBudget) => {
+    const updateTeamTransferBudget = async (teamId, newBudget) => {
         const { error } = await supabase
             .from('teams')
-            .update({ budget: parseInt(newBudget) })
+            .update({ transfer_budget: parseInt(newBudget) })
             .eq('id', teamId);
 
         if (!error) {
-            setTeams(prev => prev.map(t => t.id === teamId ? { ...t, budget: parseInt(newBudget) } : t));
+            setTeams(prev => prev.map(t => t.id === teamId ? { ...t, transferBudget: parseInt(newBudget) } : t));
         } else {
-            alert("Failed to update budget: " + error.message);
+            alert("Failed to update transfer budget: " + error.message);
         }
     };
 
-    const applyBudgetToAllTeams = async (newBudget) => {
+    const updateTeamSalaryBudget = async (teamId, newBudget) => {
         const { error } = await supabase
             .from('teams')
-            .update({ budget: parseInt(newBudget) })
+            .update({ salary_budget: parseInt(newBudget) })
+            .eq('id', teamId);
+
+        if (!error) {
+            setTeams(prev => prev.map(t => t.id === teamId ? { ...t, salaryBudget: parseInt(newBudget) } : t));
+        } else {
+            alert("Failed to update salary budget: " + error.message);
+        }
+    };
+
+    const applyBudgetToAllTeams = async (newTransferBudget, newSalaryBudget) => {
+        const { error } = await supabase
+            .from('teams')
+            .update({
+                transfer_budget: parseInt(newTransferBudget),
+                salary_budget: parseInt(newSalaryBudget)
+            })
             .eq('competition_id', currentCompetitionId);
 
         if (!error) {
-            setTeams(prev => prev.map(t => ({ ...t, budget: parseInt(newBudget) })));
+            setTeams(prev => prev.map(t => ({
+                ...t,
+                transferBudget: parseInt(newTransferBudget),
+                salaryBudget: parseInt(newSalaryBudget)
+            })));
         } else {
             alert("Failed to reset budgets: " + error.message);
         }
@@ -170,19 +216,22 @@ export const LeagueProvider = ({ children }) => {
         };
 
         const updatedRoster = [...team.roster, newPlayer];
-        const updatedBudget = team.budget - parseFloat(auctionPrice);
+        const updatedTransferBudget = (team.transferBudget ?? team.transfer_budget ?? 0) - parseFloat(auctionPrice);
 
         // Supabase Update
         const { error } = await supabase
             .from('teams')
             .update({
                 roster: updatedRoster,
-                budget: updatedBudget
+                transfer_budget: updatedTransferBudget
             })
             .eq('id', teamId);
 
         if (!error) {
-            setTeams(prev => prev.map(t => t.id === teamId ? { ...t, roster: updatedRoster, budget: updatedBudget } : t));
+            setTeams(prev => prev.map(t => t.id === teamId
+                ? { ...t, roster: updatedRoster, transferBudget: updatedTransferBudget }
+                : t
+            ));
         } else {
             alert("Error updating roster: " + error.message);
         }
@@ -196,23 +245,40 @@ export const LeagueProvider = ({ children }) => {
         const refundAmt = playerToRemove ? playerToRemove.auctionPrice : 0;
 
         const updatedRoster = team.roster.filter(p => p.id !== playerId);
-        const updatedBudget = team.budget + refundAmt;
+        const updatedTransferBudget = (team.transferBudget ?? team.transfer_budget ?? 0) + refundAmt;
 
         const { error } = await supabase
             .from('teams')
             .update({
                 roster: updatedRoster,
-                budget: updatedBudget
+                transfer_budget: updatedTransferBudget
             })
             .eq('id', teamId);
 
         if (!error) {
-            setTeams(prev => prev.map(t => t.id === teamId ? { ...t, roster: updatedRoster, budget: updatedBudget } : t));
+            setTeams(prev => prev.map(t => t.id === teamId
+                ? { ...t, roster: updatedRoster, transferBudget: updatedTransferBudget }
+                : t
+            ));
         }
     };
 
-    const updateLeagueSettings = (newSettings) => {
-        setLeagueSettings(prev => ({ ...prev, ...newSettings }));
+    const updateLeagueSettings = async (newSettings) => {
+        const merged = { ...leagueSettings, ...newSettings };
+        setLeagueSettings(merged);
+
+        // Persist to competitions.settings
+        if (currentCompetitionId) {
+            const { error } = await supabase
+                .from('competitions')
+                .update({ settings: merged })
+                .eq('id', currentCompetitionId);
+
+            if (error) {
+                console.error('Error saving league settings:', error);
+                alert('Failed to save settings: ' + error.message);
+            }
+        }
     };
 
     // --- TRADING SYSTEM ---
@@ -259,10 +325,11 @@ export const LeagueProvider = ({ children }) => {
 
             let updatedTeams = [...prevTeams];
 
+            // Cash transfers operate on transferBudget
             if (price && price > 0) {
                 updatedTeams = updatedTeams.map(t => {
-                    if (t.id === fromTeamId) return { ...t, budget: t.budget - price };
-                    if (t.id === toTeamId) return { ...t, budget: t.budget + price };
+                    if (t.id === fromTeamId) return { ...t, transferBudget: (t.transferBudget || 0) - price };
+                    if (t.id === toTeamId) return { ...t, transferBudget: (t.transferBudget || 0) + price };
                     return t;
                 });
             }
@@ -300,8 +367,9 @@ export const LeagueProvider = ({ children }) => {
             setTeams: updateTeamsState, // expose wrapped setter
             loadLeague,
             registerTeam,
-            updateTeamBudget, // NEW
-            applyBudgetToAllTeams, // NEW: Reset all
+            updateTeamTransferBudget, // Replaces updateTeamBudget
+            updateTeamSalaryBudget,   // NEW
+            applyBudgetToAllTeams,    // Updated for dual budgets
             sendOffer, // Exposed
             resolveOffer // Exposed
         }

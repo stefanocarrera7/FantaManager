@@ -3,6 +3,7 @@ import { useLeague } from './LeagueContext';
 import { generateFixtures } from '../utils/scheduler';
 import { calculatePlayerScore } from '../utils/scoringEngine';
 import { supabase } from '../lib/supabase';
+import { DEFAULT_FINANCE_SETTINGS } from '../utils/budgetProcessor';
 
 const CompetitionContext = createContext();
 
@@ -57,7 +58,7 @@ export const CompetitionProvider = ({ children }) => {
             name,
             share_code: shareCode,
             admin_id: adminId, // Supabase Auth ID
-            settings: {}
+            settings: { ...DEFAULT_FINANCE_SETTINGS }
         };
 
         const { data, error } = await supabase

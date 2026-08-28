@@ -1,6 +1,6 @@
 import { useTeam } from '../context/TeamContext';
 import { useCompetition } from '../context/CompetitionContext';
-import { Trophy, Users, Wallet } from 'lucide-react';
+import { Trophy, Users, Wallet, Banknote } from 'lucide-react';
 
 const StatCard = ({ title, value, icon: Icon, color }) => (
     <div className="glass-card" style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
@@ -24,7 +24,7 @@ const StatCard = ({ title, value, icon: Icon, color }) => (
 );
 
 const Dashboard = () => {
-    const { teamName, budget, stats } = useTeam();
+    const { teamName, transferBudget, salaryBudget, stats } = useTeam();
     const { activeCompetition } = useCompetition();
 
     return (
@@ -50,10 +50,16 @@ const Dashboard = () => {
                 marginBottom: '2rem'
             }}>
                 <StatCard
-                    title="Season Budget"
-                    value={`${budget} M`}
+                    title="Budget Trasferimenti"
+                    value={`${transferBudget} M`}
                     icon={Wallet}
                     color="var(--color-accent-primary)"
+                />
+                <StatCard
+                    title="Monte Ingaggi"
+                    value={`${salaryBudget} M`}
+                    icon={Banknote}
+                    color="var(--color-accent-gold)"
                 />
                 <StatCard
                     title="Squad Size"

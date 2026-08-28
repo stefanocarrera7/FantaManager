@@ -88,7 +88,7 @@ const OfferModal = ({ targetPlayer, targetTeamId, onClose }) => {
                                 required
                             />
                             <p style={{ fontSize: '0.8rem', color: 'var(--color-text-muted)', marginTop: '0.5rem' }}>
-                                Your Budget: {myTeam.budget} cr
+                                Budget Trasferimenti: {myTeam.transferBudget ?? myTeam.transfer_budget ?? 0} cr
                             </p>
                         </div>
                     )}

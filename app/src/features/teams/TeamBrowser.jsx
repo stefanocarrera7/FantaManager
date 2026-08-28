@@ -30,7 +30,9 @@ const TeamBrowser = () => {
                         onClick={() => setSelectedTeamId(t.id)}
                     >
                         <div style={{ fontWeight: 600 }}>{t.name}</div>
-                        <div style={{ fontSize: '0.8rem', color: 'var(--color-text-muted)' }}>Running Budget: {t.budget}</div>
+                        <div style={{ fontSize: '0.8rem', color: 'var(--color-text-muted)' }}>
+                            Budget Trasf: {t.transferBudget ?? t.transfer_budget ?? 0} | Ingaggi: {t.salaryBudget ?? t.salary_budget ?? 0}
+                        </div>
                     </button>
                 ))}
             </div>

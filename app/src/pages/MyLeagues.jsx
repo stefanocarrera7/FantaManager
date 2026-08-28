@@ -115,7 +115,7 @@ const MyLeagues = () => {
                                             <Shield size={14} /> {myTeam.name}
                                         </span>
                                         <span>•</span>
-                                        <span>Role: {competition.adminId === user?.username ? 'Admin' : 'Manager'}</span>
+                                        <span>Role: {competition.adminId === user?.id || competition.adminId === user?.username ? 'Admin' : 'Manager'}</span>
                                     </div>
                                 </div>
                                 <ArrowRight size={24} color="var(--color-accent-primary)" />

@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, useMemo } from 'react';
 import { useLeague } from './LeagueContext';
+import { getNextEventDate } from '../utils/budgetProcessor';
 
 const TeamContext = createContext();
 
@@ -18,6 +19,8 @@ export const TeamProvider = ({ children }) => {
     // Fallback if no team (e.g. admin mode with no team selected, or user not assigned)
     const effectiveTeam = myTeam || {
         name: currentUser.role === 'admin' ? 'Admin View' : 'No Team Assigned',
+        transferBudget: 0,
+        salaryBudget: 0,
         budget: 0,
         roster: []
     };
@@ -32,18 +35,20 @@ export const TeamProvider = ({ children }) => {
     // Derived Financials
     const totalSalaries = effectiveTeam.roster.reduce((sum, p) => sum + (p.salary || 0), 0);
 
-    const installments = useMemo(() => {
-        const tranches = leagueSettings.tranches || [];
-        if (tranches.length === 0) return { december: 0, june: 0 };
+    // Next event dates
+    const nextSalaryPaymentDate = useMemo(() => {
+        return getNextEventDate(leagueSettings.salaryPaymentDate);
+    }, [leagueSettings.salaryPaymentDate]);
 
-        // Simple 50/50 split based on User Rule "Fixed dates 31/01 and 01/09"
-        // Assuming the total annual salary is split evenly between the two dates.
-        const half = Math.ceil(totalSalaries / 2);
-        return {
-            firstTranche: half,  // 31 Jan
-            secondTranche: totalSalaries - half // 1 Sep
-        };
-    }, [totalSalaries, leagueSettings.tranches]);
+    const nextRestoreDate = useMemo(() => {
+        return getNextEventDate(leagueSettings.restoreDate);
+    }, [leagueSettings.restoreDate]);
+
+    // Projected salary budget after next payment
+    const projectedSalaryBudget = useMemo(() => {
+        const current = effectiveTeam.salaryBudget ?? effectiveTeam.salary_budget ?? 0;
+        return Math.round((current - totalSalaries) * 10) / 10;
+    }, [effectiveTeam.salaryBudget, effectiveTeam.salary_budget, totalSalaries]);
 
     // Actions
     // Note: Most "Write" actions like Buying players are now handled by LeagueContext/Admin.
@@ -61,7 +66,9 @@ export const TeamProvider = ({ children }) => {
 
     const value = {
         teamName: effectiveTeam.name, // Use real name from LeagueContext
-        budget: effectiveTeam.budget,   // Use real budget
+        transferBudget: effectiveTeam.transferBudget ?? effectiveTeam.transfer_budget ?? 0,
+        salaryBudget: effectiveTeam.salaryBudget ?? effectiveTeam.salary_budget ?? 0,
+        budget: effectiveTeam.budget ?? 0, // Legacy compat
         roster: effectiveTeam.roster,   // Use real roster
         stadium,
         market: {
@@ -71,7 +78,11 @@ export const TeamProvider = ({ children }) => {
         },
         financials: {
             totalSalaries,
-            installments,
+            projectedSalaryBudget,
+            nextSalaryPaymentDate,
+            nextRestoreDate,
+            restoreTransferAmount: leagueSettings.restoreTransferAmount || 0,
+            restoreSalaryAmount: leagueSettings.restoreSalaryAmount || 0,
             history: [] // To be implemented
         },
         stats: {

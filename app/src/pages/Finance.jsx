@@ -2,8 +2,7 @@ import { useTeam } from '../context/TeamContext';
 import FinanceDashboard from '../features/finance/FinanceDashboard';
 
 const Finance = () => {
-    const { budget, financials } = useTeam();
-    const projectedBudget = (budget - financials.totalSalaries).toFixed(1);
+    const { transferBudget, salaryBudget, financials } = useTeam();
 
     return (
         <div>
@@ -15,9 +14,9 @@ const Finance = () => {
             </header>
 
             <FinanceDashboard
-                budget={budget}
+                transferBudget={transferBudget}
+                salaryBudget={salaryBudget}
                 financials={financials}
-                projectedBudget={projectedBudget}
             />
         </div>
     );
